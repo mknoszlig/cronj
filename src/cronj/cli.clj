@@ -1,40 +1,11 @@
 (ns cronj.cli
-  (:require [cronj.periods :as cp]
-            [clojure.string :as s]
-            [cronj.executors :as ex])
-  (:import [cronj.periods Seconds Minutes Hours Days DoM DoW]
-           [cronj.executors Executable]
-           [java.util Date GregorianCalendar]
-           [java.text SimpleDateFormat ParseException]))
-
-(defn- single-match-re [re]
-  #(when-let [[_ r] (re-find re %)] (Integer/parseInt r)))
-
-(defn- split-re [sep re]
-  #(when-let [[_ r] (re-find re %)] (s/split r sep)))
-
+  (:use [cronj.core :only [Periodic Displayable Executable execute display]])
+  (:import [java.util Date]))
 
 (defmulti parser identity)
-(defmethod parser Seconds [_] #(when-let [args ((single-match-re #"^([0-9]+)s$") %)]
-                                 (Seconds. args)))
-(defmethod parser Minutes [_] #(when-let [args ((single-match-re #"^([0-9]+)m$") %)]
-                                 (Minutes. args)))
-(defmethod parser Hours   [_] #(when-let [args ((single-match-re #"^([0-9]+)h$") %)]
-                                 (Hours. args)))
-(defmethod parser Days    [_] #(when-let [args ((single-match-re #"^([0-9]+)d$") %)]
-                                 (Days. args)))
-(defmethod parser DoM     [_] (fn [s]
-                                (when-let [args  (seq
-                                                  ((split-re #":" #"^(.+):dom$") s))]
-                                  (DoM. (map #(Integer/parseInt %) args)))))
-(defmethod parser DoW     [_] #(when-let [args ((split-re #":" #"^(.+):dow$") %)]
-                                 (DoW. args)))
-(defmethod parser Date    [_] #(let [sdf (SimpleDateFormat. "HH:mm:ss z")]
-                                 (try
-                                   (.parse sdf %)
-                                   (catch ParseException e nil))))
+
 (defn get-period [str]
-  (first (drop-while nil? (map #((parser %) str) (extenders cp/Periodic)))))
+  (first (drop-while nil? (map #((parser %) str) (extenders Periodic)))))
 
 (defn parse-period [spec]
   (when-let [[_ per-spec offset] (re-find #"^(.+)@(.+)$" spec)]
@@ -44,10 +15,10 @@
 (defn add-job [id period-str cmd]
   (let [[period seed] (parse-period period-str)
         initial-time (atom nil)]
-    (reify ex/Executable
-           (execute [this] (ex/execute cmd))
-           cp/Displayable
-           (display [this] (str id (cp/display period))))))
+    (reify Executable
+           (execute [this] (execute cmd))
+           Displayable
+           (display [this] (str id (display period))))))
   
 
 (comment

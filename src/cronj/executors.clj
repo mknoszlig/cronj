@@ -1,8 +1,6 @@
 (ns cronj.executors
   (:use [cronj.core]))
 
-(defprotocol Executable
-  (execute [this]))
 
 (extend clojure.lang.IFn
   Executable

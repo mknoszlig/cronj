@@ -1,5 +1,5 @@
 (ns cronj.test.periods
-  (:use [midje.sweet] [cronj.periods])
+  (:use [midje.sweet] [cronj core periods])
   (:import [java.util Date GregorianCalendar TimeZone]
            [cronj.periods Seconds Minutes Hours Days]))
 
