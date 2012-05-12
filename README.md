@@ -1,5 +1,5 @@
 # cronj
-[![Build Status](https://secure.travis-ci.org/nachtalp/cronj.png?branch=master)](http://travis-ci.org/nachtalp/cronj)
+[![Build Status](https://secure.travis-ci.org/nachtalp/cronj.png?branch=master)](http://travis-ci.org/mknoszlig/cronj)
 
 a cron replacement in pure clojure
 
