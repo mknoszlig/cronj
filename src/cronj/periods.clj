@@ -1,5 +1,5 @@
 (ns cronj.periods
-  (:use [cronj.core :only [Periodic Displayable]]
+  (:use [cronj.core :only [Periodic Displayable defperiod]]
         [cronj.cli  :only [parser]])
   (:require [clojure.string :as s])
   (:import [java.util Calendar GregorianCalendar Date]
@@ -30,71 +30,45 @@
                 (catch ParseException e nil))))
 
 
-(defrecord Seconds [num])
-(extend-type Seconds
-  Periodic
-  (next-event [this seed]
-              (clone-and-add seed Calendar/SECOND (:num this)))
-  Displayable
-  (display [this] (render this "s")))
-(defmethod parser Seconds [_]
-           #(when-let [args ((single-match-re #"^([0-9]+)s$") %)]
-              (Seconds. args)))
+ (defperiod Seconds [num]
+      (clone-and-add seed Calendar/SECOND (:num this))
+      (render this "s")
+      #(when-let [args ((single-match-re #"^([0-9]+)s$") %)]
+         (Seconds. args)))
 
 
-(defrecord Minutes [num])
-(extend-type Minutes
-  Periodic
-  (next-event [this seed]
-              (clone-and-add seed Calendar/MINUTE  (:num this)))
-  Displayable
-  (display [this] (render this "m")))
-(defmethod parser Minutes [_]
-           #(when-let [args ((single-match-re #"^([0-9]+)m$") %)]
-              (Minutes. args)))
+(defperiod Minutes [num]
+  (clone-and-add seed Calendar/MINUTE  (:num this))
+  (render this "m")
+  #(when-let [args ((single-match-re #"^([0-9]+)m$") %)]
+     (Minutes. args)))
 
 
-(defrecord Hours [num])
-(extend-type Hours
-  Periodic
-  (next-event [this seed] (clone-and-add seed Calendar/HOUR (:num this)))
-  Displayable
-  (display [this] (render this "h")))
-(defmethod parser Hours [_]
-           #(when-let [args ((single-match-re #"^([0-9]+)h$") %)]
-              (Hours. args)))
+(defperiod Hours [num]
+  (clone-and-add seed Calendar/HOUR (:num this))
+  (render this "h")
+  #(when-let [args ((single-match-re #"^([0-9]+)h$") %)]
+     (Hours. args)))
 
 
-(defrecord Days [num])
-(extend-type Days
-  Periodic
-  (next-event [this seed] (clone-and-add seed Calendar/DAY_OF_YEAR (:num this)))
-  Displayable
-  (display [this] (render this "d")))
-(defmethod parser Days [_]
-           #(when-let [args ((single-match-re #"^([0-9]+)d$") %)]
-              (Days. args)))
+(defperiod Days [num]
+  (clone-and-add seed Calendar/DAY_OF_YEAR (:num this))
+  (render this "d")
+  #(when-let [args ((single-match-re #"^([0-9]+)d$") %)]
+     (Days. args)))
 
 
-(defrecord DoW [week-days])
-(extend-type DoW
-  Periodic
-  (next-event [this seed] nil)
-  Displayable
-  (display [this] (str (apply str (interpose ":" (:week-days this))) ":")))
-(defmethod parser DoW [_]
-           #(when-let [args ((split-re #":" #"^(.+):dow$") %)]
-              (DoW. args)))
+(defperiod DoW [week-days]
+  nil
+  (str (apply str (interpose ":" (:week-days this))) ":dow")
+  #(when-let [args ((split-re #":" #"^(.+):dow$") %)]
+     (DoW. args)))
 
 
-(defrecord DoM [month-days])
-(extend-type DoM
-  Periodic
-  (next-event [this seed] nil)
-  Displayable
-  (display [this] (str (apply str (interpose ":" (:month-days this))) ":")))
-(defmethod parser DoM [_]
-           (fn [s]
-             (when-let [args  (seq
-                               ((split-re #":" #"^(.+):dom$") s))]
-               (DoM. (map #(Integer/parseInt %) args)))))
+(defperiod DoM [month-days]
+  nil
+  (str (apply str (interpose ":" (:month-days this))) ":")
+  (fn [s]
+    (when-let [args  (seq
+                      ((split-re #":" #"^(.+):dom$") s))]
+      (DoM. (map #(Integer/parseInt %) args)))))
